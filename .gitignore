@@ -1,0 +1,12 @@
+# Simple but robust set of patterns for a Swift project
+
+.build
+.DS_Store
+.idea
+.vscode
+.swiftpm
+.swiftformat
+.swiftlint
+.env
+
+scratchpad/
