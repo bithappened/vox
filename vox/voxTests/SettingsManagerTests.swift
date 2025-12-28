@@ -1,11 +1,11 @@
 import Foundation
 import XCTest
 
-@testable import vos
+@testable import vox
 
 /// Unit tests for SettingsManager
 final class SettingsManagerTests: XCTestCase {
-  let testKey = "vos_api_key"  // Same as production key
+  let testKey = "vox_api_key"  // Same as production key
   var manager: SettingsManager!
 
   override func setUp() {
@@ -113,7 +113,7 @@ final class SettingsManagerTests: XCTestCase {
   func testGetAPIKey_DoubleTrimming_Works() {
     // Given - simulate corrupted storage
     let keyWithExtraSpaces = "sk-proj-test  \n"
-    UserDefaults.standard.set(keyWithExtraSpaces, forKey: "vos_api_key")
+    UserDefaults.standard.set(keyWithExtraSpaces, forKey: "vox_api_key")
 
     // When
     let result = manager.getAPIKey()

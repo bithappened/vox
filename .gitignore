@@ -10,3 +10,6 @@
 .env
 
 scratchpad/
+
+# Python virtual environment
+.venv/

@@ -2,26 +2,26 @@
 import PackageDescription
 
 let package = Package(
-  name: "vos",
+  name: "vox",
   platforms: [
     .macOS(.v13)
   ],
   products: [
     .executable(
-      name: "vos",
-      targets: ["vos"]
+      name: "vox",
+      targets: ["vox"]
     )
   ],
   targets: [
     .executableTarget(
-      name: "vos",
-      path: "vos/vos",
+      name: "vox",
+      path: "vox/vox",
       exclude: ["Info.plist"]
     ),
     .testTarget(
-      name: "vosTests",
-      dependencies: ["vos"],
-      path: "vos/vosTests"
+      name: "voxTests",
+      dependencies: ["vox"],
+      path: "vox/voxTests"
     )
   ]
 )

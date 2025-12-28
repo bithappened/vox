@@ -11,23 +11,33 @@ struct SettingsView: View {
   @Environment(\.dismiss) var dismiss
 
   var body: some View {
-    VStack(spacing: 24) {
+    VStack(spacing: 0) {
       // Header
       HStack(spacing: 12) {
-        Image(systemName: "gearshape.fill")
-          .font(.system(size: 28))
-          .foregroundStyle(.blue)
+        Image(systemName: "mic.fill")
+          .font(.system(size: 32))
+          .foregroundStyle(.red)
 
-        Text("Settings")
-          .font(.title2)
-          .fontWeight(.semibold)
+        VStack(alignment: .leading, spacing: 2) {
+          Text("vox")
+            .font(.title2)
+            .fontWeight(.semibold)
+
+          Text("Voice transcription")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
 
         Spacer()
       }
+      .padding(.bottom, 24)
+
+      Divider()
+        .padding(.bottom, 24)
 
       // API Key Section
       VStack(alignment: .leading, spacing: 12) {
-        Text("OpenAI API Key")
+        Label("OpenAI API Key", systemImage: "key.fill")
           .font(.headline)
 
         HStack(spacing: 8) {
@@ -41,7 +51,7 @@ struct SettingsView: View {
           .textFieldStyle(.roundedBorder)
           .font(.system(.body, design: .monospaced))
           .onChange(of: apiKey) { _ in
-            statusMessage = ""  // Clear message on edit
+            statusMessage = ""
           }
 
           Button {
@@ -49,26 +59,47 @@ struct SettingsView: View {
           } label: {
             Image(systemName: showKey ? "eye.slash.fill" : "eye.fill")
               .foregroundStyle(.secondary)
-              .frame(width: 20, height: 20)
+              .frame(width: 24, height: 24)
           }
           .buttonStyle(.plain)
           .help(showKey ? "Hide API key" : "Show API key")
         }
 
-        Text("Get your API key from platform.openai.com")
-          .font(.caption)
-          .foregroundStyle(.secondary)
+        Link(destination: URL(string: "https://platform.openai.com/api-keys")!) {
+          Label("Get your API key from OpenAI", systemImage: "arrow.up.right.square")
+            .font(.caption)
+        }
+        .foregroundStyle(.blue)
       }
 
-      // Model Info
-      HStack(spacing: 8) {
-        Text("Model:")
-          .foregroundStyle(.secondary)
-        Text("gpt-4o-transcribe")
-          .fontWeight(.medium)
-        Spacer()
+      Spacer()
+        .frame(height: 24)
+
+      // Info Section
+      VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 8) {
+          Image(systemName: "waveform")
+            .foregroundStyle(.secondary)
+          Text("Model: gpt-4o-transcribe")
+            .foregroundStyle(.secondary)
+        }
+
+        HStack(spacing: 8) {
+          Image(systemName: "command")
+            .foregroundStyle(.secondary)
+          Text("Shortcut: ⌘⇧R")
+            .foregroundStyle(.secondary)
+        }
       }
       .font(.subheadline)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(16)
+      .background(
+        RoundedRectangle(cornerRadius: 8)
+          .fill(Color.primary.opacity(0.05))
+      )
+
+      Spacer()
 
       // Status Message
       if !statusMessage.isEmpty {
@@ -79,10 +110,9 @@ struct SettingsView: View {
           Text(statusMessage)
             .font(.callout)
         }
+        .padding(.bottom, 16)
         .transition(.scale.combined(with: .opacity))
       }
-
-      Spacer()
 
       // Buttons
       HStack(spacing: 12) {
@@ -102,7 +132,7 @@ struct SettingsView: View {
       }
     }
     .padding(32)
-    .frame(width: 520, height: 320)
+    .frame(width: 440, height: 360)
     .onAppear {
       loadAPIKey()
     }
@@ -133,7 +163,7 @@ struct SettingsView: View {
       return
     }
 
-    // Save
+    // Save API key
     guard SettingsManager.shared.saveAPIKey(trimmed) else {
       showError("Failed to save API key")
       return
@@ -141,12 +171,12 @@ struct SettingsView: View {
 
     // Success
     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-      statusMessage = "API key saved successfully (length: \(trimmed.count))"
+      statusMessage = "Saved!"
       isSuccess = true
     }
 
     // Auto-dismiss after success
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
       dismiss()
     }
   }
@@ -171,13 +201,13 @@ class SettingsWindowController {
       let hosting = NSHostingController(rootView: settingsView)
 
       let panel = NSPanel(
-        contentRect: NSRect(x: 0, y: 0, width: 520, height: 320),
+        contentRect: NSRect(x: 0, y: 0, width: 440, height: 360),
         styleMask: [.titled, .closable],
         backing: .buffered,
         defer: false
       )
 
-      panel.title = "vos Settings"
+      panel.title = "vox Settings"
       panel.contentViewController = hosting
       panel.center()
       panel.isReleasedWhenClosed = false
@@ -196,5 +226,5 @@ class SettingsWindowController {
 
 #Preview {
   SettingsView()
-    .frame(width: 520, height: 320)
+    .frame(width: 440, height: 360)
 }

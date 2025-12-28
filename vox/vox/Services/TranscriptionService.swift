@@ -21,7 +21,11 @@ enum TranscriptionError: Error, LocalizedError {
 /// Service for transcribing audio using OpenAI Whisper API
 final class TranscriptionService {
   private let apiURL = "https://api.openai.com/v1/audio/transcriptions"
-  private let model = "gpt-4o-transcribe"
+
+  /// Get current model from settings
+  private var model: String {
+    SettingsManager.shared.getTranscriptionModel().rawValue
+  }
 
   /// Transcribes audio file using OpenAI Whisper API
   func transcribe(audioURL: URL, completion: @escaping (Result<String, Error>) -> Void) {
@@ -129,6 +133,17 @@ final class TranscriptionService {
     body.append(Data("--\(boundary)\r\n".utf8))
     body.append(Data("Content-Disposition: form-data; name=\"model\"\r\n\r\n".utf8))
     body.append(Data("\(model)\r\n".utf8))
+
+    // Add language parameter if not auto-detect
+    let languagePref = SettingsManager.shared.getLanguagePreference()
+    if languagePref != "auto" {
+      body.append(Data("--\(boundary)\r\n".utf8))
+      body.append(Data("Content-Disposition: form-data; name=\"language\"\r\n\r\n".utf8))
+      body.append(Data("\(languagePref)\r\n".utf8))
+      print("🌐 Using language: \(languagePref)")
+    } else {
+      print("🌐 Using auto-detect (supports multilingual/code-switching)")
+    }
 
     // Add file parameter
     let audioData = try Data(contentsOf: audioURL)

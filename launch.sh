@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# vos Launch Script
+# vox Launch Script
 
-echo "🎤 vos - Audio Transcription App"
+echo "🎤 vox - Audio Transcription App"
 echo ""
 
 # Build if needed
-if [ ! -f "./.build/debug/vos" ]; then
-    echo "Building vos..."
+if [ ! -f "./.build/debug/vox" ]; then
+    echo "Building vox..."
     swift build
     echo ""
 fi
@@ -18,10 +18,10 @@ echo "  ✓ Make sure to grant Microphone permission when prompted"
 echo "  ✓ For global shortcuts, grant Accessibility permission if needed"
 echo ""
 
-echo "🚀 Launching vos..."
+echo "🚀 Launching vox..."
 echo "  • Click the microphone icon in menu bar for options"
 echo "  • Or use Cmd+Shift+R keyboard shortcut to start/stop recording"
 echo ""
 
 # Launch the app
-./.build/debug/vos
+./.build/debug/vox

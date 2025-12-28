@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import vos
+@testable import vox
 
 /// Unit tests for API key validation logic
 final class ValidationTests: XCTestCase {

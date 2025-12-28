@@ -2,14 +2,14 @@
 
 set -e
 
-echo "🔨 Building vos.app..."
+echo "🔨 Building vox.app..."
 
 # Build in release mode
 echo "  → Building release binary..."
 swift build -c release
 
 # Create app bundle structure
-APP_DIR="vos.app"
+APP_DIR="vox.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
@@ -23,7 +23,13 @@ mkdir -p "$RESOURCES_DIR"
 
 # Copy binary
 echo "  → Copying binary..."
-cp .build/release/vos "$MACOS_DIR/vos"
+cp .build/release/vox "$MACOS_DIR/vox"
+
+# Copy icon if it exists
+if [ -f "resources/AppIcon.icns" ]; then
+    echo "  → Copying app icon..."
+    cp resources/AppIcon.icns "$RESOURCES_DIR/AppIcon.icns"
+fi
 
 # Create Info.plist
 echo "  → Creating Info.plist..."
@@ -35,13 +41,15 @@ cat > "$CONTENTS_DIR/Info.plist" << 'EOF'
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
-	<string>vos</string>
+	<string>vox</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.vos.app</string>
+	<string>com.vox.app</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleName</key>
-	<string>vos</string>
+	<string>vox</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -53,9 +61,9 @@ cat > "$CONTENTS_DIR/Info.plist" << 'EOF'
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>vos needs microphone access to record audio for transcription.</string>
+	<string>vox needs microphone access to record audio for transcription.</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>vos uses global keyboard shortcuts for quick access.</string>
+	<string>vox uses global keyboard shortcuts for quick access.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2025. All rights reserved.</string>
 </dict>
@@ -63,10 +71,10 @@ cat > "$CONTENTS_DIR/Info.plist" << 'EOF'
 EOF
 
 echo ""
-echo "✅ vos.app created successfully!"
+echo "✅ vox.app created successfully!"
 echo ""
 echo "To install:"
 echo "  make install"
 echo ""
 echo "Or manually:"
-echo "  cp -r vos.app ~/Applications/"
+echo "  cp -r vox.app ~/Applications/"

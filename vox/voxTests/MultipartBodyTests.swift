@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import vos
+@testable import vox
 
 /// Unit tests for multipart/form-data body creation
 final class MultipartBodyTests: XCTestCase {
