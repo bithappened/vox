@@ -1,4 +1,4 @@
-.PHONY: build run clean format format-check lint check test build-app install uninstall dev all help
+.PHONY: build run rerun clean format format-check lint check test build-app install uninstall dev all help
 
 help:
 	@echo "vox - macOS Menu Bar Transcription App"
@@ -6,6 +6,7 @@ help:
 	@echo "Available commands:"
 	@echo "  make build        - Build debug binary"
 	@echo "  make run          - Build and run from source"
+	@echo "  make rerun        - Kill any running vox, then build and run"
 	@echo "  make dev          - Build and run with verbose output"
 	@echo "  make test         - Run unit tests"
 	@echo "  make build-app    - Build vox.app bundle"
@@ -24,6 +25,11 @@ build:
 	@swift build
 
 run: build
+	@echo "Running vox..."
+	@./.build/debug/vox
+
+rerun: build
+	@pkill -x vox 2>/dev/null || true
 	@echo "Running vox..."
 	@./.build/debug/vox
 

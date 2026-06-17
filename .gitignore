@@ -1,6 +1,8 @@
 # Simple but robust set of patterns for a Swift project
 
 .build
+# Built app bundle (produced by `make build-app`)
+vox.app/
 .DS_Store
 .idea
 .vscode

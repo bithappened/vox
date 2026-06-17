@@ -42,134 +42,137 @@ enum StatusWindowPosition: String, CaseIterable {
   }
 }
 
-/// Manages app settings using UserDefaults
+/// Manages app settings.
 ///
-/// Uses UserDefaults for API key storage, which is the standard approach for Mac apps
-/// (similar to Slack, Discord, VSCode, etc.). Automatically trims whitespace and newlines
-/// to prevent corruption issues.
+/// Non-sensitive preferences live in UserDefaults; the API key lives in the Keychain.
+/// Both stores are injectable so tests can run against isolated suites.
 final class SettingsManager {
   static let shared = SettingsManager()
 
-  private let defaults = UserDefaults.standard
-  private let apiKeyKey = "vox_api_key"
+  private let defaults: UserDefaults
+  private let credentialStore: CredentialStore
+
   private let languageKey = "vox_language_preference"
   private let positionKey = "vox_status_window_position"
-  private let animationSetKey = "vox_animation_set"
   private let transcriptionModelKey = "vox_transcription_model"
+  private let animationStyleKey = "vox_recording_animation_style"
 
-  private init() {}
+  // Legacy key used by versions prior to Keychain migration.
+  private let legacyAPIKeyKey = "vox_api_key"
+  private let legacyAnimationSetKey = "vox_animation_set"
 
-  /// Save API key with automatic trimming
-  /// Returns true if saved successfully
+  init(
+    defaults: UserDefaults = .standard,
+    credentialStore: CredentialStore = KeychainCredentialStore()
+  ) {
+    self.defaults = defaults
+    self.credentialStore = credentialStore
+    migrateLegacyAPIKeyIfNeeded()
+    migrateLegacyAnimationStyleIfNeeded()
+  }
+
+  // MARK: - API key
+
+  @discardableResult
   func saveAPIKey(_ key: String) -> Bool {
     let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
-
-    guard !trimmed.isEmpty else {
-      print("⚠️  Cannot save empty API key")
-      return false
-    }
-
-    defaults.set(trimmed, forKey: apiKeyKey)
-    defaults.synchronize()  // Force immediate write
-
-    print("💾 API key saved (length: \(trimmed.count))")
-    return true
+    guard !trimmed.isEmpty else { return false }
+    return credentialStore.save(trimmed)
   }
 
-  /// Get API key with automatic trimming
-  /// Returns nil if no key is stored
   func getAPIKey() -> String? {
-    guard let key = defaults.string(forKey: apiKeyKey) else {
-      print("🔑 No API key configured")
-      return nil
-    }
-
-    // Double-trim for safety (handles any edge cases)
+    guard let key = credentialStore.get() else { return nil }
     let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : trimmed
+  }
 
+  func hasAPIKey() -> Bool { getAPIKey() != nil }
+
+  func deleteAPIKey() { credentialStore.delete() }
+
+  /// One-time migration from UserDefaults to Keychain. Safe to call repeatedly.
+  private func migrateLegacyAPIKeyIfNeeded() {
+    guard let legacy = defaults.string(forKey: legacyAPIKeyKey) else { return }
+    let trimmed = legacy.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else {
-      print("🔑 API key is empty after trimming")
-      return nil
+      defaults.removeObject(forKey: legacyAPIKeyKey)
+      return
     }
 
-    print("🔑 API key retrieved (length: \(trimmed.count))")
-    return trimmed
+    if credentialStore.get() != nil || credentialStore.save(trimmed) {
+      defaults.removeObject(forKey: legacyAPIKeyKey)
+    } else {
+      debugLog("Leaving legacy API key in UserDefaults because Keychain migration failed")
+    }
   }
 
-  /// Check if an API key is configured
-  func hasAPIKey() -> Bool {
-    return getAPIKey() != nil
-  }
+  // MARK: - Language
 
-  /// Delete stored API key
-  func deleteAPIKey() {
-    defaults.removeObject(forKey: apiKeyKey)
-    defaults.synchronize()
-    print("🗑️  API key deleted")
-  }
-
-  /// Save language preference
-  /// - Parameter language: Language code ("auto" for auto-detect, "en" for English, "es" for Spanish, etc.)
   func saveLanguagePreference(_ language: String) {
     defaults.set(language, forKey: languageKey)
-    defaults.synchronize()
-    print("🌐 Language preference saved: \(language)")
   }
 
-  /// Get language preference
-  /// Returns "auto" by default to support multilingual transcription
+  /// Returns "auto" by default (supports multilingual transcription).
   func getLanguagePreference() -> String {
-    return defaults.string(forKey: languageKey) ?? "auto"
+    defaults.string(forKey: languageKey) ?? "auto"
   }
 
-  /// Save status window position
+  // MARK: - Status window position
+
   func savePosition(_ position: StatusWindowPosition) {
     defaults.set(position.rawValue, forKey: positionKey)
-    defaults.synchronize()
   }
 
-  /// Get status window position
-  /// Returns .topRight by default (unobtrusive for coding)
+  /// Returns `.topRight` by default (unobtrusive for coding).
   func getPosition() -> StatusWindowPosition {
-    guard let rawValue = defaults.string(forKey: positionKey),
-      let position = StatusWindowPosition(rawValue: rawValue)
-    else {
-      return .topRight
-    }
+    guard let raw = defaults.string(forKey: positionKey),
+      let position = StatusWindowPosition(rawValue: raw)
+    else { return .topRight }
     return position
   }
 
-  /// Save animation set preference
-  func saveAnimationSet(_ animationSet: AnimationSetType) {
-    defaults.set(animationSet.rawValue, forKey: animationSetKey)
-    defaults.synchronize()
-  }
+  // MARK: - Transcription model
 
-  /// Get animation set preference
-  /// Returns .waveform by default
-  func getAnimationSet() -> AnimationSetType {
-    guard let rawValue = defaults.string(forKey: animationSetKey),
-      let animationSet = AnimationSetType(rawValue: rawValue)
-    else {
-      return .waveform  // Default to Set C
-    }
-    return animationSet
-  }
-
-  /// Save transcription model preference
   func saveTranscriptionModel(_ model: TranscriptionModel) {
     defaults.set(model.rawValue, forKey: transcriptionModelKey)
-    defaults.synchronize()
   }
 
-  /// Get transcription model preference
-  /// Returns .gpt4oMiniTranscribe by default (faster for voice notes)
+  /// Returns `.gpt4oMiniTranscribe` by default (faster for short voice notes).
   func getTranscriptionModel() -> TranscriptionModel {
-    guard let rawValue = defaults.string(forKey: transcriptionModelKey),
-      let model = TranscriptionModel(rawValue: rawValue)
-    else {
-      return .gpt4oMiniTranscribe  // Default to faster model
-    }
+    guard let raw = defaults.string(forKey: transcriptionModelKey),
+      let model = TranscriptionModel(rawValue: raw)
+    else { return .gpt4oMiniTranscribe }
     return model
+  }
+
+  // MARK: - Recording animation style
+
+  func saveAnimationStyle(_ style: RecordingAnimationStyle) {
+    defaults.set(style.rawValue, forKey: animationStyleKey)
+  }
+
+  /// Returns `.tinyRobot` (Rover Buddy, the signature look) by default.
+  func getAnimationStyle() -> RecordingAnimationStyle {
+    guard let raw = defaults.string(forKey: animationStyleKey) else { return .tinyRobot }
+    if raw == "edge_aura" { return .voiceWave }  // "Edge Aura" was renamed to "Voice Wave"
+    return RecordingAnimationStyle(rawValue: raw) ?? .tinyRobot
+  }
+
+  private func migrateLegacyAnimationStyleIfNeeded() {
+    guard let legacy = defaults.string(forKey: legacyAnimationSetKey) else { return }
+
+    if defaults.string(forKey: animationStyleKey) == nil {
+      // The old visualizer styles were consolidated into Ribbon Wave.
+      let migratedStyle: RecordingAnimationStyle?
+      switch legacy {
+      case "waveform", "bars", "pulse_rings", "ribbon_wave": migratedStyle = .voiceWave
+      default: migratedStyle = nil
+      }
+      if let migratedStyle {
+        saveAnimationStyle(migratedStyle)
+      }
+    }
+
+    defaults.removeObject(forKey: legacyAnimationSetKey)
   }
 }

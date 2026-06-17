@@ -25,8 +25,8 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>vos needs microphone access to record audio for transcription.</string>
+	<string>vox needs microphone access to record audio for transcription.</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>vos needs accessibility access to register global keyboard shortcuts.</string>
+	<string>vox needs accessibility access to register global keyboard shortcuts.</string>
 </dict>
 </plist>

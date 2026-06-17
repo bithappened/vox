@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate app icon for vos - a voice transcription app.
+"""Generate app icon for vox - a voice transcription app.
 
 Creates a modern, minimal icon with a waveform design.
 """

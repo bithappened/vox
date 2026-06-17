@@ -115,9 +115,8 @@ final class ValidationTests: XCTestCase {
   // MARK: - Actual API Key Tests
 
   func testRealAPIKey_PreservesCorrectLength() {
-    // Given - the actual API key from requirements
-    let realKey =
-      "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"
+    // Given - synthetic key matching real OpenAI format/length (164 chars)
+    let realKey = "sk-proj-" + String(repeating: "x", count: 156)
 
     // Then
     XCTAssertEqual(realKey.count, 164)
@@ -127,8 +126,8 @@ final class ValidationTests: XCTestCase {
 
   func testRealAPIKey_WithWhitespace_TrimsTo164() {
     // Given - key with extra whitespace (common copy-paste error)
-    let keyWithSpaces =
-      "  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  \n"
+    let baseKey = "sk-proj-" + String(repeating: "x", count: 156)
+    let keyWithSpaces = "  \(baseKey)  \n"
 
     // When
     let trimmed = keyWithSpaces.trimmingCharacters(in: .whitespacesAndNewlines)

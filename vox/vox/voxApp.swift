@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct VosApp: App {
+struct VoxApp: App {
   @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
   var body: some Scene {

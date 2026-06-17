@@ -6,12 +6,14 @@ struct TranscriptionEntry: Identifiable, Codable {
   let text: String
   let timestamp: Date
   let language: String
+  let duration: TimeInterval?
 
-  init(text: String, language: String) {
+  init(text: String, language: String, duration: TimeInterval? = nil) {
     self.id = UUID()
     self.text = text
     self.timestamp = Date()
     self.language = language
+    self.duration = duration
   }
 }
 
@@ -26,31 +28,22 @@ final class TranscriptionHistory {
   private init() {}
 
   /// Add a new transcription to history
-  func addEntry(text: String, language: String) {
+  func addEntry(text: String, language: String, duration: TimeInterval? = nil) {
     var entries = getEntries()
-    let newEntry = TranscriptionEntry(text: text, language: language)
-    entries.insert(newEntry, at: 0)  // Add to front
-
-    // Keep only the most recent entries
+    entries.insert(TranscriptionEntry(text: text, language: language, duration: duration), at: 0)
     if entries.count > maxEntries {
       entries = Array(entries.prefix(maxEntries))
     }
-
     saveEntries(entries)
-    print("📜 Added transcription to history (total: \(entries.count))")
   }
 
   /// Get all transcription entries
   func getEntries() -> [TranscriptionEntry] {
-    guard let data = defaults.data(forKey: historyKey) else {
-      return []
-    }
-
+    guard let data = defaults.data(forKey: historyKey) else { return [] }
     do {
-      let entries = try JSONDecoder().decode([TranscriptionEntry].self, from: data)
-      return entries
+      return try JSONDecoder().decode([TranscriptionEntry].self, from: data)
     } catch {
-      print("⚠️  Failed to decode history: \(error)")
+      debugLog("Failed to decode history: \(error)")
       return []
     }
   }
@@ -58,8 +51,6 @@ final class TranscriptionHistory {
   /// Clear all history
   func clearHistory() {
     defaults.removeObject(forKey: historyKey)
-    defaults.synchronize()
-    print("🗑️  Transcription history cleared")
   }
 
   /// Delete a specific entry
@@ -67,16 +58,14 @@ final class TranscriptionHistory {
     var entries = getEntries()
     entries.removeAll { $0.id == id }
     saveEntries(entries)
-    print("🗑️  Deleted transcription from history")
   }
 
   private func saveEntries(_ entries: [TranscriptionEntry]) {
     do {
       let data = try JSONEncoder().encode(entries)
       defaults.set(data, forKey: historyKey)
-      defaults.synchronize()
     } catch {
-      print("⚠️  Failed to save history: \(error)")
+      debugLog("Failed to save history: \(error)")
     }
   }
 }

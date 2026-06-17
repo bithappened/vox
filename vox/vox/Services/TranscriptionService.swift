@@ -53,10 +53,6 @@ final class TranscriptionService {
       return nil
     }
 
-    // Log for debugging (safe - only first/last chars)
-    let preview = "\(apiKey.prefix(7))...\(apiKey.suffix(4))"
-    print("✅ Using API key: \(preview) (length: \(apiKey.count))")
-
     return apiKey
   }
 
@@ -69,7 +65,6 @@ final class TranscriptionService {
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-    print("🌐 Auth header length: \(7 + apiKey.count) (should be 171)")
 
     // Create multipart form data
     let boundary = "Boundary-\(UUID().uuidString)"
@@ -140,9 +135,6 @@ final class TranscriptionService {
       body.append(Data("--\(boundary)\r\n".utf8))
       body.append(Data("Content-Disposition: form-data; name=\"language\"\r\n\r\n".utf8))
       body.append(Data("\(languagePref)\r\n".utf8))
-      print("🌐 Using language: \(languagePref)")
-    } else {
-      print("🌐 Using auto-detect (supports multilingual/code-switching)")
     }
 
     // Add file parameter
